@@ -1,11 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "AI Overview Link Grabber",
+  "name": "Google SERP Link Collector",
   "version": "1.0",
-  "description": "Extracts AI overview links from Google search results.",
-  "permissions": ["activeTab", "scripting", "downloads"],
+  "description": "Collects links from Google search results directly from the SERP.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "downloads"
+  ],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": "icons/icon48.png"
+  },
+  "icons": {
+    "48": "icons/icon48.png"
   }
 }
 
