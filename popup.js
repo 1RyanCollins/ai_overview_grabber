@@ -1,5 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    // --- Select Section Mode ---
+    document.getElementById("selectSection").addEventListener("click", async () => {
+        let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id) return;
+
+        chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: enableSectionSelection
+        });
+
+        alert("Hover over the section you want and click it. Then click 'Grab Links'.");
+    });
+
+    // --- Grab Links ---
     document.getElementById("grab").addEventListener("click", async () => {
         try {
             let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -7,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const results = await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
-                func: grabTextFragmentLinksWithType
+                func: grabLinksFromSelectedSection
             });
 
             if (!results || !results[0] || !results[0].result) {
@@ -17,12 +31,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const rows = results[0].result;
 
-            // Display links in textarea with bullet and include type info
+            // Display links in textarea
             document.getElementById("links").value = rows.map(r =>
                 `- ${r.type}: ${r.link_raw}`
             ).join("\n");
 
-            // Save for CSV download
             window._scrapedRows = rows;
 
         } catch (err) {
@@ -31,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // --- Copy to clipboard ---
     document.getElementById("copy").addEventListener("click", async () => {
         const text = document.getElementById("links").value;
         if (!text) { alert("Nothing to copy!"); return; }
@@ -43,7 +57,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    document.getElementById("download")?.addEventListener("click", () => {
+    // --- Download CSV ---
+    document.getElementById("download").addEventListener("click", () => {
         if (!window._scrapedRows || window._scrapedRows.length === 0) {
             alert("No data to download. Grab links first.");
             return;
@@ -67,7 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-// Clean text
+// --- Helpers ---
+
 function cleanText(str) {
     if (!str && str !== 0) return "";
     let s = String(str);
@@ -76,20 +92,50 @@ function cleanText(str) {
     return s;
 }
 
-// Grab links with type detection
-function grabTextFragmentLinksWithType() {
-    const rows = [];
+// --- Page Script: Enable section selection ---
+function enableSectionSelection() {
+    const style = document.createElement('style');
+    style.innerHTML = `.highlighted-section { outline: 3px solid red !important; cursor: pointer; }`;
+    document.head.appendChild(style);
+
+    function mouseOverHandler(e) {
+        e.target.classList.add('highlighted-section');
+        e.stopPropagation();
+    }
+    function mouseOutHandler(e) {
+        e.target.classList.remove('highlighted-section');
+        e.stopPropagation();
+    }
+    function clickHandler(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.removeEventListener('mouseover', mouseOverHandler, true);
+        document.removeEventListener('mouseout', mouseOutHandler, true);
+        document.removeEventListener('click', clickHandler, true);
+
+        alert('Section selected! Now click "Grab Links".');
+        window._selectedSection = e.target;
+    }
+
+    document.addEventListener('mouseover', mouseOverHandler, true);
+    document.addEventListener('mouseout', mouseOutHandler, true);
+    document.addEventListener('click', clickHandler, true);
+}
+
+// --- Page Script: Grab links from selected section ---
+function grabLinksFromSelectedSection() {
+    const container = window._selectedSection || document.body;
     const query = document.querySelector("textarea[name='q'], input[name='q'], input[aria-label='Search']")?.value || "";
 
-    const anchors = Array.from(document.querySelectorAll("a[href*=':~:text=']"));
+    const anchors = Array.from(container.querySelectorAll("a[href*=':~:text=']"));
+    const rows = [];
 
     anchors.forEach(a => {
         try {
             const href = a.href;
             const link_cleaned = href.split("#")[0];
 
-            // Detect location/type
-            let type = "Other";
+            let type = "Custom Section"; // default
             if (a.closest("div[data-hveid][data-async-context], div[jscontroller='EEGHee'], div[jscontroller='VXpV4c'], div[jscontroller='Uut0Ic']")) {
                 type = "AI Overview";
             } else if (a.closest("div[jsname='Cpkphb'], div[jscontroller='CedFv']")) {
@@ -107,6 +153,5 @@ function grabTextFragmentLinksWithType() {
 
     return rows;
 }
-
 
 
