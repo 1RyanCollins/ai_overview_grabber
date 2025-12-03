@@ -84,7 +84,3 @@ function scrapeGoogleLinks() {
 }
 
 
-    return Array.from(new Set(links)); // remove duplicates
-}
-
-
