@@ -31,11 +31,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let rows = results[0].result;
 
-            // Filter out unwanted links
-            rows = rows.filter(link => !link.includes("https://policies.google.com/privacy"));
+            // --- Filter out Google privacy policy ---
+            rows = rows.filter(r => !r.includes("https://policies.google.com/privacy"));
 
-            // Display as bullet points
-            document.getElementById("links").value = rows.map(link => `• ${link}`).join("\n");
+            // Display links in textarea
+            document.getElementById("links").value = rows.map(r => r).join("\n");
 
             window._scrapedRows = rows;
 
@@ -116,6 +116,7 @@ function grabLinksFromSelectedSection() {
     const uniqueLinks = Array.from(new Set(links));
     return uniqueLinks;
 }
+
 
 
 
