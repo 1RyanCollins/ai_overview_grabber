@@ -87,51 +87,11 @@ document.addEventListener("DOMContentLoaded", () => {
             filename: "links.csv"
         });
     });
-
-    // ---------------------------
-    // Detect SERP features on open
-    // ---------------------------
-    (async function detectFeatures() {
-        let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (!tab?.id) return;
-
-        const res = await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            func: () => ({
-                paa: detectByHeading("People also ask"),
-                ai: detectByHeading("AI Overview"),
-                products: detectByHeading("Popular products") || detectByHeading("Products"),
-                videos: detectByHeading("Videos")
-            })
-        });
-
-        const d = res?.[0]?.result || {};
-        const found = [];
-
-        toggle("grabPAA", d.paa, found, "People Also Ask");
-        toggle("grabAI", d.ai, found, "AI Overview");
-        toggle("grabProducts", d.products, found, "Popular Products");
-        toggle("grabVideos", d.videos, found, "Videos");
-
-        document.getElementById("detectedFeature").textContent =
-            found.length ? `Detected: ${found.join(", ")}` : "No SERP features detected";
-    })();
-
-    function toggle(id, enabled, list, label) {
-        const btn = document.getElementById(id);
-        btn.disabled = !enabled;
-        if (enabled) list.push(label);
-    }
 });
 
 // ---------------------------
 // Page-context helpers
 // ---------------------------
-function detectByHeading(text) {
-    return [...document.querySelectorAll("div, span, h1, h2, h3")]
-        .some(el => el.innerText.trim() === text);
-}
-
 function enableSectionSelection() {
     const style = document.createElement("style");
     style.textContent = `.highlighted-section { outline: 3px solid red !important; }`;
@@ -191,6 +151,7 @@ function grabVideoLinks() {
     const c = h.closest("[role='region']") || h.parentElement;
     return [...new Set([...c.querySelectorAll("a[href]")].map(a => a.href))];
 }
+
 
 
 
