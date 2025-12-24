@@ -1,5 +1,34 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    // --- Feature Buttons ---
+
+    document.getElementById("grabPAA")?.addEventListener("click", async () => {
+        await grabFeature(grabPeopleAlsoAskLinks);
+    });
+
+    document.getElementById("grabAI")?.addEventListener("click", async () => {
+        await grabFeature(grabAIOverviewLinks);
+    });
+
+    async function grabFeature(featureFunc) {
+        try {
+            let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (!tab?.id) throw new Error("No active tab found.");
+
+            const results = await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: featureFunc
+            });
+
+            const rows = results?.[0]?.result || [];
+            document.getElementById("links").value = rows.join("\n");
+            window._scrapedRows = rows;
+        } catch (err) {
+            console.error(err);
+            alert("Error grabbing links: " + err.message);
+        }
+    }
+
     // --- Select Section Mode ---
     document.getElementById("selectSection")?.addEventListener("click", async () => {
         let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -13,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Hover over the section you want and click it. Then click 'Grab Links'.");
     });
 
-    // --- Grab Links ---
+    // --- Grab Links from Selected Section ---
     document.getElementById("grab")?.addEventListener("click", async () => {
         try {
             let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -24,28 +53,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 func: grabLinksFromSelectedSection
             });
 
-            if (!results || !results[0] || !results[0].result) {
-                document.getElementById("links").value = "";
-                return;
-            }
-
-            let rows = results[0].result;
-
-            // --- Filter out Google privacy policy ---
-            rows = rows.filter(r => !r.includes("https://policies.google.com/privacy"));
-
-            // Display links in textarea
-            document.getElementById("links").value = rows.map(r => r).join("\n");
-
+            const rows = results?.[0]?.result || [];
+            document.getElementById("links").value = rows.join("\n");
             window._scrapedRows = rows;
-
         } catch (err) {
             console.error(err);
             alert("Error grabbing links: " + err.message);
         }
     });
 
-    // --- Copy to clipboard ---
+    // --- Copy to Clipboard ---
     document.getElementById("copy")?.addEventListener("click", async () => {
         const text = document.getElementById("links").value;
         if (!text) { alert("Nothing to copy!"); return; }
@@ -98,7 +115,7 @@ function enableSectionSelection() {
         document.removeEventListener('click', clickHandler, true);
 
         alert('Section selected! Now click "Grab Links".');
-        window._selectedSection = e.target;
+        window._selectedSection = e.target.closest('[role="region"]') || e.target;
     }
 
     document.addEventListener('mouseover', mouseOverHandler, true);
@@ -106,16 +123,43 @@ function enableSectionSelection() {
     document.addEventListener('click', clickHandler, true);
 }
 
-// --- Page Script: Grab all links from selected section ---
+// --- Grab all links from selected section ---
 function grabLinksFromSelectedSection() {
     const container = window._selectedSection || document.body;
     const anchors = Array.from(container.querySelectorAll("a[href]"));
-    const links = anchors.map(a => a.href);
-
-    // Remove duplicates
-    const uniqueLinks = Array.from(new Set(links));
-    return uniqueLinks;
+    return [...new Set(anchors.map(a => a.href))];
 }
+
+// --- Grab People Also Ask ---
+function grabPeopleAlsoAskLinks() {
+    const heading = [...document.querySelectorAll('div, span, h1, h2, h3')]
+        .find(el => el.innerText.trim() === 'People also ask');
+    if (!heading) return [];
+
+    const container = heading.closest('[role="region"]') || heading.parentElement;
+
+    container.querySelectorAll('[role="button"]').forEach(btn => btn.click());
+
+    return [...new Set(
+        [...container.querySelectorAll('a[href]')]
+            .map(a => a.href)
+            .filter(h => !h.includes('google.com'))
+    )];
+}
+
+// --- Grab AI Overview (placeholder) ---
+function grabAIOverviewLinks() {
+    const heading = [...document.querySelectorAll('div, span, h1, h2, h3')]
+        .find(el => el.innerText.trim() === 'AI Overview');
+    if (!heading) return [];
+
+    const container = heading.closest('[role="region"]') || heading.parentElement;
+
+    return [...new Set(
+        [...container.querySelectorAll('a[href]')].map(a => a.href)
+    )];
+}
+
 
 
 
