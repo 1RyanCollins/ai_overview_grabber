@@ -19,6 +19,16 @@
       width: 100%; 
       padding: 8px;
     }
+    #featureButtons {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    #featureButtons button {
+      flex: 1;
+      padding: 5px;
+      font-size: 12px;
+    }
     .footer {
       margin-top: 12px;
       font-size: 11px;
@@ -32,6 +42,12 @@
   <h3>Google SERP Link Collector</h3>
 
   <textarea id="links" readonly></textarea>
+
+  <!-- Feature buttons -->
+  <div id="featureButtons">
+    <button id="grabPAA">People Also Ask</button>
+    <button id="grabAI">AI Overview</button>
+  </div>
 
   <button id="selectSection">Select Section</button>
   <button id="grab">Grab Links</button>
