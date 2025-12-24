@@ -10,6 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
         await grabFeature(grabAIOverviewLinks);
     });
 
+    document.getElementById("grabVideos")?.addEventListener("click", async () => {
+        await grabFeature(grabVideosLinks);
+    });
+
+    document.getElementById("grabProducts")?.addEventListener("click", async () => {
+        await grabFeature(grabPopularProductsLinks);
+    });
+
     async function grabFeature(featureFunc) {
         try {
             let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -147,7 +155,7 @@ function grabPeopleAlsoAskLinks() {
     )];
 }
 
-// --- Grab AI Overview (placeholder) ---
+// --- Grab AI Overview ---
 function grabAIOverviewLinks() {
     const heading = [...document.querySelectorAll('div, span, h1, h2, h3')]
         .find(el => el.innerText.trim() === 'AI Overview');
@@ -157,6 +165,36 @@ function grabAIOverviewLinks() {
 
     return [...new Set(
         [...container.querySelectorAll('a[href]')].map(a => a.href)
+    )];
+}
+
+// --- Grab Videos ---
+function grabVideosLinks() {
+    const heading = [...document.querySelectorAll('div, span, h1, h2, h3')]
+        .find(el => el.innerText.trim() === 'Videos');
+    if (!heading) return [];
+
+    const container = heading.closest('[role="region"]') || heading.parentElement;
+
+    return [...new Set(
+        [...container.querySelectorAll('a[href]')]
+            .map(a => a.href)
+            .filter(h => h.includes('youtube.com') || !h.includes('google.com'))
+    )];
+}
+
+// --- Grab Popular Products ---
+function grabPopularProductsLinks() {
+    const heading = [...document.querySelectorAll('div, span, h1, h2, h3')]
+        .find(el => el.innerText.trim() === 'Popular products');
+    if (!heading) return [];
+
+    const container = heading.closest('[role="region"]') || heading.parentElement;
+
+    return [...new Set(
+        [...container.querySelectorAll('a[href]')]
+            .map(a => a.href)
+            .filter(h => !h.includes('google.com'))
     )];
 }
 
