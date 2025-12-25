@@ -36,17 +36,34 @@
       color: #555;
       text-align: center;
     }
+    .description {
+      font-size: 12px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .feature-label {
+      font-size: 11px;
+      color: #777;
+      margin-bottom: 4px;
+    }
   </style>
 </head>
 <body>
 
   <h3>Google SERP Link Collector</h3>
 
+  <!-- Description below the title -->
+  <div class="description">
+    This Chrome extension helps you quickly grab links from Google search results, including top organic results, People Also Ask, AI Overview, and video sections. Easily copy or download links for your workflow.
+  </div>
+
   <textarea id="links" readonly></textarea>
+
+  <!-- Small text above the buttons -->
+  <div class="feature-label">Easy Click Buttons</div>
 
   <!-- Feature buttons -->
   <div id="featureButtons">
-    <button id="grabOrganic">Top Organic Results (Page 1)</button>
     <button id="grabPAA">People Also Ask</button>
     <button id="grabAI">AI Overview</button>
     <button id="grabVideos">Videos</button>
@@ -58,8 +75,7 @@
   <button id="download">Download CSV</button>
 
   <div class="footer">
-    Developed by Ryan Collins PhD
-    <br>
+    Developed by Ryan Collins
     <a href="https://ryancollinsphd.com/" target="_blank">ryancollinsphd.com</a>
   </div>
 
